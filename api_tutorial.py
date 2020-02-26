@@ -25,12 +25,12 @@ def get_device_list(filename):
     return device_list
     
 def create_csv_frame():
-    data = requests.get('https://api.quant-aq.com/device-api/v1/devices/SN000-062/data/raw/', auth = (api_key,''))
+    data = requests.get('https://api.quant-aq.com/device-api/v1/devices/SN000-062/data/raw/?limit=1', auth = (api_key,''))
     columns = list(data.json()['data'][0].keys())
     return columns
 
 def save_data(device_sn):
-    url = 'https://api.quant-aq.com/device-api/v1/devices/'+'%s' %device_sn + '/data/raw/?limit=10'
+    url = 'https://api.quant-aq.com/device-api/v1/devices/'+'%s' %device_sn + '/data/raw/'
     data = requests.get(url, auth = (api_key,''))
     data_json = data.json()
     # df = pd.read_json(json.dumps(data_json))
@@ -43,7 +43,7 @@ def save_data(device_sn):
             if type(one_time_dict[key]) is dict:
                 one_time_dict[key] = flatDict(one_time_dict[key])
             one_data_list.append(one_time_dict[key])
-        data_list.append(one_time_dict)
+        data_list.append(one_data_list)
     return data_list
 
 
@@ -58,22 +58,14 @@ def main():
     initializeAPI('API_key.txt')
     devices = get_device_list('device_list.csv')
     csv_column = create_csv_frame()
-    all_data = []
     for device in devices:
-        all_data.append(save_data(device))
-    df1 = pd.DataFrame(all_data)
-    df = df1.T
-            #Creates a csv file for each device
-        # with open ('%s.csv' %device,'wb') as f:  
-        #     for one_time_dict in realtime_data:
-        #         for key in one_time_dict.keys():
-        #             # print(one_time_dict[key])
-        #             f.write("%s\n" %one_time_dict[key])
+        all_data = save_data(device)
+        df = pd.DataFrame(all_data)
+        df.columns = csv_column
+        df.to_csv('savedata/%s.csv' %device)
 
-        #     f.close()
 
-# get_device_list('device_list.csv')
-#     print(device_info_list[0])
+
 main()
 #%%
 
